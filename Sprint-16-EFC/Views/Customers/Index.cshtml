@@ -1,0 +1,78 @@
+﻿@model IEnumerable<EFC.Models.Customer>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<form asp-controller="Customers" asp-action="Index" method="get" style="display: flex; align-items: center; gap: 10px;">
+    <label for="searchInput">Find by name: </label>
+    <input type="text" id="searchInput" name="name" value="@ViewData["CurrentFilter"]" placeholder="Enter name..." />
+
+    <input type="hidden" name="sortBy" value="@ViewData["CurrentSort"]" />
+    <input type="hidden" name="isAscending" value="@(ViewData["IsAscending"]?.ToString()?.ToLower())" />
+
+    <button type="submit" id="searchButton">Search</button>
+    
+    <b>|</b>
+    <a asp-controller="Customers" asp-action="Index">Back to Full List</a>
+</form>
+
+@if (!Model.Any())
+{
+    <p>No customers found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.LastName)
+                    <a asp-controller="Customers" asp-action="Index" asp-route-sortBy="LastName" asp-route-isAscending="true" asp-route-name="@ViewData["CurrentFilter"]">▲</a>
+                    <a asp-controller="Customers" asp-action="Index" asp-route-sortBy="LastName" asp-route-isAscending="false" asp-route-name="@ViewData["CurrentFilter"]">▼</a>
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.FirstName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Address)
+                    <a asp-controller="Customers" asp-action="Index" asp-route-sortBy="Address" asp-route-isAscending="true" asp-route-name="@ViewData["CurrentFilter"]">▲</a>
+                    <a asp-controller="Customers" asp-action="Index" asp-route-sortBy="Address" asp-route-isAscending="false" asp-route-name="@ViewData["CurrentFilter"]">▼</a>
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Discount)
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+    @foreach (var item in Model) {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LastName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FirstName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Address)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Discount)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+    }
+        </tbody>
+    </table>
+}
