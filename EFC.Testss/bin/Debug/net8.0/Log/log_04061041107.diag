@@ -1,0 +1,16 @@
+2026-04-06T10:32:41.1126738+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION Version: 1.4.3+c252b64ad913ea9411fc5d17bfd5580d2d061497
+2026-04-06T10:32:41.1278867+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION Logging mode: asynchronous
+2026-04-06T10:32:41.1287374+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION Logging level: Information
+2026-04-06T10:32:41.1287419+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION CreateBuilderAsync entry time: 10:32:41.081
+2026-04-06T10:32:41.1315335+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION PID: 20308
+2026-04-06T10:32:41.1316227+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION Runtime information: win-x64 - .NET 8.0.25
+2026-04-06T10:32:41.1316314+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION Runtime location: C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.25\System.Private.CoreLib.dll
+2026-04-06T10:32:41.1316383+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION IsDynamicCodeSupported: True
+2026-04-06T10:32:41.1316433+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION Test module: F:\softservPra\16-17\EFC.Testss\bin\Debug\net8.0\EFC.Tests.dll
+2026-04-06T10:32:41.1317906+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION Command line arguments: '--server --diagnostic --diagnostic-verbosity Information --diagnostic-output-directory F:\softservPra\16-17\EFC.Testss\bin\Debug\net8.0\Log --results-directory F:\softservPra\16-17\Sprint-16-EFC\TestResults --client-port 52962'
+2026-04-06T10:32:41.1330467+00:00 Microsoft.Testing.Platform.Builder.TestApplication INFORMATION TESTINGPLATFORM_DEFAULT_HANG_TIMEOUT: ''
+2026-04-06T10:32:41.1601802+00:00 Microsoft.Testing.Platform.Hosts.TestHostBuilder INFORMATION Setting RegisterEnvironmentVariablesConfigurationSource: 'True'
+2026-04-06T10:32:41.1629324+00:00 Microsoft.Testing.Platform.Configurations.JsonConfigurationSource+JsonConfigurationProvider INFORMATION Config file 'F:\softservPra\16-17\EFC.Testss\bin\Debug\net8.0\EFC.Tests.testconfig.json' not found.
+2026-04-06T10:32:41.1640676+00:00 Microsoft.Testing.Platform.Hosts.TestHostBuilder INFORMATION Setting PlatformExitProcessOnUnhandledException: 'False', config file: False environment variable:  VSTest mode: False
+2026-04-06T10:32:41.2928965+00:00 Microsoft.Testing.Platform.Requests.TestHostTestFrameworkInvoker INFORMATION Test framework UID: 'MSTestExtension' Version: '3.6.4' DisplayName: 'MSTest' Description: 'MSTest Framework for Microsoft Testing Platform'
+2026-04-06T10:32:41.3870410+00:00 Microsoft.Testing.Extensions.VSTestBridge.ObjectModel.MessageLoggerAdapter INFORMATION Test Parallelization enabled for F:\softservPra\16-17\EFC.Testss\bin\Debug\net8.0\EFC.Tests.dll (Workers: 16, Scope: MethodLevel)
