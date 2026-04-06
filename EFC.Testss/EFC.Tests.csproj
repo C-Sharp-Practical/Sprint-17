@@ -16,6 +16,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\OrderDetailTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Models\OrderDetailTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.Mvc" Version="5.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.25" />
