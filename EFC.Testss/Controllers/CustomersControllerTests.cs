@@ -7,6 +7,7 @@ using EFC.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EFC.Services;
 
 namespace EFC.Tests.Controllers
 {
@@ -33,7 +34,8 @@ namespace EFC.Tests.Controllers
                 new Customer { FirstName = "Ivan", LastName = "Ivanov", Address = "Lviv" }
             );
             await context.SaveChangesAsync();
-            var controller = new CustomersController(context);
+            var service = new CustomerService(context);
+            var controller = new CustomersController(service);
 
             var result = await controller.Index(name: "Mykola") as ViewResult;
             var model = result.Model as List<Customer>;
@@ -53,7 +55,8 @@ namespace EFC.Tests.Controllers
                 new Customer { FirstName = "B", LastName = "B", Address = "Lviv" }
             );
             await context.SaveChangesAsync();
-            var controller = new CustomersController(context);
+            var service = new CustomerService(context);
+            var controller = new CustomersController(service);
 
             // Act
             var result = await controller.Index(name: null, sortBy: "Address", isAscending: false) as ViewResult;
@@ -73,7 +76,8 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new CustomersController(context);
+            var service = new CustomerService(context);
+            var controller = new CustomersController(service);
 
             // Act
             var result = await controller.Details(null);
@@ -87,7 +91,8 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new CustomersController(context);
+            var service = new CustomerService(context);
+            var controller = new CustomersController(service);
             var newCustomer = new Customer 
             { 
                 FirstName = "Test", 
@@ -109,7 +114,8 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new CustomersController(context);
+            var service = new CustomerService(context);
+            var controller = new CustomersController(service);
             controller.ModelState.AddModelError("FirstName", "Required");
             var invalidCustomer = new Customer { LastName = "User" };
 
@@ -135,7 +141,8 @@ namespace EFC.Tests.Controllers
             };
             context.Customers.Add(customer);
             await context.SaveChangesAsync();
-            var controller = new CustomersController(context);
+            var service = new CustomerService(context);
+            var controller = new CustomersController(service);
 
             // Act
             await controller.DeleteConfirmed(1);

@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using EFC.Controllers;
 using EFC.Data;
 using EFC.Models;
+using EFC.Services;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 
 namespace EFC.Tests.Controllers
 {
@@ -32,7 +34,8 @@ namespace EFC.Tests.Controllers
                 context.Supermarkets.Add(new Supermarket { Id = i, Name = $"Market {i}", Address = "Street" });
             }
             await context.SaveChangesAsync();
-            var controller = new SupermarketsController(context);
+            var service = new SupermarketService(context);
+            var controller = new SupermarketsController(service);
 
             // Act
             var result = await controller.Index(pageNum: 1) as ViewResult;
@@ -60,7 +63,8 @@ namespace EFC.Tests.Controllers
             }
             await context.SaveChangesAsync();
 
-            var controller = new SupermarketsController(context);
+            var service = new SupermarketService(context);
+            var controller = new SupermarketsController(service);
 
             // Act
             var result = await controller.Index(pageNum: 2) as ViewResult;
@@ -76,7 +80,8 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new SupermarketsController(context);
+            var service = new SupermarketService(context);
+            var controller = new SupermarketsController(service);
 
             // Act
             var result = await controller.Details(999);
@@ -90,7 +95,8 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new SupermarketsController(context);
+            var service = new SupermarketService(context);
+            var controller = new SupermarketsController(service);
             var market = new Supermarket { Name = "ATB", Address = "Main St" };
 
             // Act
@@ -112,7 +118,8 @@ namespace EFC.Tests.Controllers
 
             context.Entry(market).State = EntityState.Detached;
 
-            var controller = new SupermarketsController(context);
+            var service = new SupermarketService(context);
+            var controller = new SupermarketsController(service);
 
             var updated = new Supermarket
             {
@@ -145,7 +152,8 @@ namespace EFC.Tests.Controllers
 
             await context.SaveChangesAsync();
 
-            var controller = new SupermarketsController(context);
+            var service = new SupermarketService(context);
+            var controller = new SupermarketsController(service);
 
             // Act
             await controller.DeleteConfirmed(market.Id);

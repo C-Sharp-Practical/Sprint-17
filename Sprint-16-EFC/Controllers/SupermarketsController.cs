@@ -4,29 +4,30 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using EFC.Data;
 using EFC.Models;
+using EFC.Services;
 
 namespace EFC.Controllers
 {
     public class SupermarketsController : Controller
     {
-        private readonly ShoppingContext _context;
+        private readonly ISupermarketService _service;
 
-        public SupermarketsController(ShoppingContext context)
+        public SupermarketsController(ISupermarketService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: Supermarkets
         public async Task<IActionResult> Index(int? pageNum)
         {
             int pageSize = 3;
-            var supermarkets = _context.Supermarkets.AsNoTracking();
+            var supermarkets = await _service.GetAllAsync();
 
-            return View(await PaginatedList<Supermarket>
-                .CreateAsync(supermarkets, pageNum ?? 1, pageSize));
+            var list = await PaginatedList<Supermarket>
+                .CreateAsync(supermarkets, pageNum ?? 1, pageSize);
+
+            return View(list);
         }
 
         // GET: Supermarkets/Details/5
@@ -37,8 +38,7 @@ namespace EFC.Controllers
                 return NotFound();
             }
 
-            var supermarket = await _context.Supermarkets
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var supermarket = await _service.GetByIdAsync(id.Value);
             if (supermarket == null)
             {
                 return NotFound();
@@ -62,8 +62,7 @@ namespace EFC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(supermarket);
-                await _context.SaveChangesAsync();
+                await _service.CreateAsync(supermarket);
                 return RedirectToAction(nameof(Index));
             }
             return View(supermarket);
@@ -77,7 +76,7 @@ namespace EFC.Controllers
                 return NotFound();
             }
 
-            var supermarket = await _context.Supermarkets.FindAsync(id);
+            var supermarket = await _service.GetByIdAsync(id.Value);
             if (supermarket == null)
             {
                 return NotFound();
@@ -101,12 +100,11 @@ namespace EFC.Controllers
             {
                 try
                 {
-                    _context.Update(supermarket);
-                    await _context.SaveChangesAsync();
+                    await _service.UpdateAsync(supermarket);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch
                 {
-                    if (!SupermarketExists(supermarket.Id))
+                    if (!await _service.ExistsAsync(supermarket.Id))
                     {
                         return NotFound();
                     }
@@ -128,8 +126,7 @@ namespace EFC.Controllers
                 return NotFound();
             }
 
-            var supermarket = await _context.Supermarkets
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var supermarket = await _service.GetByIdAsync(id.Value);
             if (supermarket == null)
             {
                 return NotFound();
@@ -143,19 +140,13 @@ namespace EFC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var supermarket = await _context.Supermarkets.FindAsync(id);
-            if (supermarket != null)
-            {
-                _context.Supermarkets.Remove(supermarket);
-            }
-
-            await _context.SaveChangesAsync();
+            await _service.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        private bool SupermarketExists(int id)
+        private async Task<bool> SupermarketExists(int id)
         {
-            return _context.Supermarkets.Any(e => e.Id == id);
+            return await _service.ExistsAsync(id);
         }
     }
 }

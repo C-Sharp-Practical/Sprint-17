@@ -1,9 +1,10 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Mvc;
-using EFC.Controllers;
+﻿using EFC.Controllers;
 using EFC.Data;
 using EFC.Models;
+using EFC.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -31,7 +32,8 @@ namespace EFC.Tests.Controllers
                 new Product { Id = 2, Name = "Mouse", Price = 25.00 }
             );
             await context.SaveChangesAsync();
-            var controller = new ProductsController(context);
+            var service = new ProductService(context);
+            var controller = new ProductsController(service);
 
             // Act
             var result = await controller.Index() as ViewResult;
@@ -48,7 +50,8 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new ProductsController(context);
+            var service = new ProductService(context);
+            var controller = new ProductsController(service);
 
             // Act
             var result = await controller.Details(null);
@@ -65,7 +68,8 @@ namespace EFC.Tests.Controllers
             var product = new Product { Id = 10, Name = "Keyboard", Price = 45.99 };
             context.Products.Add(product);
             await context.SaveChangesAsync();
-            var controller = new ProductsController(context);
+            var service = new ProductService(context);
+            var controller = new ProductsController(service);
 
             // Act
             var result = await controller.Details(10) as ViewResult;
@@ -81,7 +85,8 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new ProductsController(context);
+            var service = new ProductService(context);
+            var controller = new ProductsController(service);
             var newProduct = new Product { Name = "Monitor", Price = 300 };
 
             // Act
@@ -99,7 +104,8 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new ProductsController(context);
+            var service = new ProductService(context);
+            var controller = new ProductsController(service);
             controller.ModelState.AddModelError("Name", "Required"); 
             var invalidProduct = new Product { Price = 100 };
 
@@ -122,7 +128,8 @@ namespace EFC.Tests.Controllers
 
             context.Entry(product).State = EntityState.Detached;
 
-            var controller = new ProductsController(context);
+            var service = new ProductService(context);
+            var controller = new ProductsController(service);
             var updatedProduct = new Product { Id = 5, Name = "New Name", Price = 15 };
 
             // Act
@@ -143,7 +150,8 @@ namespace EFC.Tests.Controllers
             var product = new Product { Id = 1, Name = "To Delete", Price = 0 };
             context.Products.Add(product);
             await context.SaveChangesAsync();
-            var controller = new ProductsController(context);
+            var service = new ProductService(context);
+            var controller = new ProductsController(service);
 
             // Act
             await controller.DeleteConfirmed(1);

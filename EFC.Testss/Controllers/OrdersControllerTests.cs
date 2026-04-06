@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using EFC.Services;
 
 namespace EFC.Tests.Controllers
 {
@@ -51,8 +52,12 @@ namespace EFC.Tests.Controllers
                 OrderDate = DateTime.Now
             });
             await context.SaveChangesAsync();
+            var orderService = new OrderService(context);
+            var customerService = new CustomerService(context);
+            var supermarketService = new SupermarketService(context);
+            var productService = new ProductService(context);
 
-            var controller = new OrdersController(context);
+            var controller = new OrdersController(orderService, customerService, supermarketService, productService);
 
             // Act
             var result = await controller.Index(null) as ViewResult;
@@ -75,7 +80,12 @@ namespace EFC.Tests.Controllers
             context.OrderDetails.Add(new OrderDetail { Id = 1, OrderId = 5, ProductId = 10, Quantity = 2 });
             await context.SaveChangesAsync();
 
-            var controller = new OrdersController(context);
+            var orderService = new OrderService(context);
+            var customerService = new CustomerService(context);
+            var supermarketService = new SupermarketService(context);
+            var productService = new ProductService(context);
+
+            var controller = new OrdersController(orderService, customerService, supermarketService, productService);
 
             // Act
             var result = await controller.Index(5) as ViewResult;
@@ -95,7 +105,12 @@ namespace EFC.Tests.Controllers
         {
             // Arrange
             using var context = GetContext();
-            var controller = new OrdersController(context);
+            var orderService = new OrderService(context);
+            var customerService = new CustomerService(context);
+            var supermarketService = new SupermarketService(context);
+            var productService = new ProductService(context);
+
+            var controller = new OrdersController(orderService, customerService, supermarketService, productService);
 
             // Act
             var result = await controller.AddDetail(OrderId: 1, ProductId: 10, Quantity: 5.5) as RedirectToActionResult;
@@ -118,7 +133,12 @@ namespace EFC.Tests.Controllers
             var detail = new OrderDetail { Id = 100, OrderId = 1, ProductId = 1, Quantity = 1 };
             context.OrderDetails.Add(detail);
             await context.SaveChangesAsync();
-            var controller = new OrdersController(context);
+            var orderService = new OrderService(context);
+            var customerService = new CustomerService(context);
+            var supermarketService = new SupermarketService(context);
+            var productService = new ProductService(context);
+
+            var controller = new OrdersController(orderService, customerService, supermarketService, productService);
 
             // Act
             await controller.DeleteDetail(100);
@@ -141,7 +161,12 @@ namespace EFC.Tests.Controllers
             });
             await context.SaveChangesAsync();
 
-            var controller = new OrdersController(context);
+            var orderService = new OrderService(context);
+            var customerService = new CustomerService(context);
+            var supermarketService = new SupermarketService(context);
+            var productService = new ProductService(context);
+
+            var controller = new OrdersController(orderService, customerService, supermarketService, productService);
             controller.ModelState.AddModelError("Error", "Model is invalid");
             var order = new Order { CustomerId = 1 };
 

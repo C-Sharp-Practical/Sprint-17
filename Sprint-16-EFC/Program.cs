@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using EFC.Data;
+using EFC.Services;
 
 namespace EFC
 {
@@ -16,6 +17,11 @@ namespace EFC
             builder.Services.AddDbContext<ShoppingContext>(options =>
                 options.UseSqlServer(builder.Configuration
                     .GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddScoped<ICustomerService, CustomerService>();
+            builder.Services.AddScoped<IProductService, ProductService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
 
             var app = builder.Build();
 

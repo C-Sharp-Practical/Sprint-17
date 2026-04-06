@@ -4,25 +4,25 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using EFC.Data;
 using EFC.Models;
+using EFC.Services;
 
 namespace EFC.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly ShoppingContext _context;
+        private readonly IProductService _service;
 
-        public ProductsController(ShoppingContext context)
+        public ProductsController(IProductService service)
         {
-            _context = context;
+            _service = service;
         }
 
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Products.ToListAsync());
+            var products = await _service.GetAllAsync();
+            return View(products);
         }
 
         // GET: Products/Details/5
@@ -33,8 +33,7 @@ namespace EFC.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var product = await _service.GetByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -58,8 +57,7 @@ namespace EFC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
+                await _service.CreateAsync(product);
                 return RedirectToAction(nameof(Index));
             }
             return View(product);
@@ -73,7 +71,7 @@ namespace EFC.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _service.GetByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -97,12 +95,11 @@ namespace EFC.Controllers
             {
                 try
                 {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
+                    await _service.UpdateAsync(product);
                 }
-                catch (DbUpdateConcurrencyException)
+                catch
                 {
-                    if (!ProductExists(product.Id))
+                    if (!await _service.ExistsAsync(product.Id))
                     {
                         return NotFound();
                     }
@@ -124,8 +121,7 @@ namespace EFC.Controllers
                 return NotFound();
             }
 
-            var product = await _context.Products
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var product = await _service.GetByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -139,19 +135,13 @@ namespace EFC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product != null)
-            {
-                _context.Products.Remove(product);
-            }
-
-            await _context.SaveChangesAsync();
+            await _service.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        private bool ProductExists(int id)
+        private async Task<bool> ProductExists(int id)
         {
-            return _context.Products.Any(e => e.Id == id);
+            return await _service.ExistsAsync(id);
         }
     }
 }

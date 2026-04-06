@@ -4,19 +4,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using EFC.Data;
 using EFC.Models;
+using EFC.Services;
 
 namespace EFC.Controllers;
 
 public class CustomersController : Controller
 {
-    private readonly ShoppingContext _context;
+    private readonly ICustomerService _service;
 
-    public CustomersController(ShoppingContext context)
+    public CustomersController(ICustomerService service)
     {
-        _context = context;
+        _service = service;
     }
 
     // GET: Customers
@@ -26,28 +25,8 @@ public class CustomersController : Controller
         ViewData["CurrentSort"] = sortBy;
         ViewData["IsAscending"] = isAscending;
 
-        IQueryable<Customer> customersQuery = _context.Customers.AsQueryable();
-
-        if (!string.IsNullOrEmpty(name))
-        {
-            customersQuery = customersQuery
-                .Where(c => c.FirstName.Contains(name) || c.LastName.Contains(name));
-        }
-
-        if (sortBy == "Address")
-        {
-            customersQuery = isAscending
-                ? customersQuery.OrderBy(c => c.Address)
-                : customersQuery.OrderByDescending(c => c.Address);
-        }
-        else
-        {
-            customersQuery = isAscending
-                ? customersQuery.OrderBy(c => c.LastName)
-                : customersQuery.OrderByDescending(c => c.LastName);
-        }
-
-        return View(await customersQuery.ToListAsync());
+        var customers = await _service.GetAllAsync(name, sortBy, isAscending);
+        return View(customers);
     }
 
     // GET: Customers/Details/5
@@ -58,8 +37,7 @@ public class CustomersController : Controller
             return NotFound();
         }
 
-        var customer = await _context.Customers
-            .FirstOrDefaultAsync(m => m.Id == id);
+        var customer = await _service.GetByIdAsync(id.Value);
         if (customer == null)
         {
             return NotFound();
@@ -83,8 +61,7 @@ public class CustomersController : Controller
     {
         if (ModelState.IsValid)
         {
-            _context.Add(customer);
-            await _context.SaveChangesAsync();
+            await _service.CreateAsync(customer);
             return RedirectToAction(nameof(Index));
         }
         return View(customer);
@@ -98,7 +75,7 @@ public class CustomersController : Controller
             return NotFound();
         }
 
-        var customer = await _context.Customers.FindAsync(id);
+        var customer = await _service.GetByIdAsync(id.Value);
         if (customer == null)
         {
             return NotFound();
@@ -122,12 +99,11 @@ public class CustomersController : Controller
         {
             try
             {
-                _context.Update(customer);
-                await _context.SaveChangesAsync();
+                await _service.UpdateAsync(customer);
             }
-            catch (DbUpdateConcurrencyException)
+            catch
             {
-                if (!CustomerExists(customer.Id))
+                if (!await _service.ExistsAsync(customer.Id))
                 {
                     return NotFound();
                 }
@@ -149,8 +125,7 @@ public class CustomersController : Controller
             return NotFound();
         }
 
-        var customer = await _context.Customers
-            .FirstOrDefaultAsync(m => m.Id == id);
+        var customer = await _service.GetByIdAsync(id.Value);
         if (customer == null)
         {
             return NotFound();
@@ -164,18 +139,7 @@ public class CustomersController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var customer = await _context.Customers.FindAsync(id);
-        if (customer != null)
-        {
-            _context.Customers.Remove(customer);
-        }
-
-        await _context.SaveChangesAsync();
+        await _service.DeleteAsync(id);
         return RedirectToAction(nameof(Index));
-    }
-
-    private bool CustomerExists(int id)
-    {
-        return _context.Customers.Any(e => e.Id == id);
     }
 }

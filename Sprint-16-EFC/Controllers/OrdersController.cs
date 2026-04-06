@@ -1,5 +1,6 @@
-﻿using EFC.Data;
+﻿using System.Linq;
 using EFC.Models;
+using EFC.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -8,11 +9,21 @@ namespace EFC.Controllers
 {
     public class OrdersController : Controller
     {
-        private readonly ShoppingContext _context;
+        private readonly IOrderService _orderService;
+        private readonly ICustomerService _customerService;
+        private readonly ISupermarketService _supermarketService;
+        private readonly IProductService _productService;
 
-        public OrdersController(ShoppingContext context)
+        public OrdersController(
+            IOrderService orderService,
+            ICustomerService customerService,
+            ISupermarketService supermarketService,
+            IProductService productService)
         {
-            _context = context;
+            _orderService = orderService;
+            _customerService = customerService;
+            _supermarketService = supermarketService;
+            _productService = productService;
         }
 
         // GET: Orders
@@ -20,20 +31,14 @@ namespace EFC.Controllers
         {
             var viewModel = new OrderIndexData();
 
-            viewModel.Orders = await _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.SuperMarket)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            viewModel.Orders = (await _orderService.GetAllAsync()).ToList();
 
             if (id.HasValue)
             {
                 ViewData["OrderID"] = id.Value;
 
-                viewModel.OrderDetails = await _context.OrderDetails
-                    .Where(x => x.OrderId == id)
-                    .Include(x => x.Product)
-                    .ToListAsync();
+                var order = await _orderService.GetByIdAsync(id.Value);
+                viewModel.OrderDetails = order?.OrderDetails ?? Enumerable.Empty<OrderDetail>();
             }
 
             return View(viewModel);
@@ -41,10 +46,10 @@ namespace EFC.Controllers
 
         // GET: Orders/Create
         [HttpGet]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "LastName");
-            ViewData["SuperMarketId"] = new SelectList(_context.Supermarkets, "Id", "Name");
+            ViewData["CustomerId"] = new SelectList((await _customerService.GetAllAsync()).Select(c => new { c.Id, c.LastName }), "Id", "LastName");
+            ViewData["SuperMarketId"] = new SelectList((await _supermarketService.GetAllAsync()).Select(s => new { s.Id, s.Name }), "Id", "Name");
             return View();
         }
 
@@ -54,12 +59,11 @@ namespace EFC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Orders.Add(model);
-                await _context.SaveChangesAsync();
+                await _orderService.CreateAsync(model);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "LastName", model.CustomerId);
-            ViewData["SuperMarketId"] = new SelectList(_context.Supermarkets, "Id", "Name", model.SuperMarketId);
+            ViewData["CustomerId"] = new SelectList((await _customerService.GetAllAsync()).Select(c => new { c.Id, c.LastName }), "Id", "LastName", model.CustomerId);
+            ViewData["SuperMarketId"] = new SelectList((await _supermarketService.GetAllAsync()).Select(s => new { s.Id, s.Name }), "Id", "Name", model.SuperMarketId);
             return View(model);
         }
 
@@ -67,18 +71,15 @@ namespace EFC.Controllers
         {
             if (id == null) return NotFound();
 
-            var order = await _context.Orders
-                .Include(o => o.OrderDetails)
-                    .ThenInclude(d => d.Product)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var order = await _orderService.GetByIdAsync(id.Value);
 
             if (order == null) return NotFound();
 
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "LastName", order.CustomerId);
-            ViewData["SuperMarketId"] = new SelectList(_context.Supermarkets, "Id", "Name", order.SuperMarketId);
+            ViewData["CustomerId"] = new SelectList((await _customerService.GetAllAsync()).Select(c => new { c.Id, c.LastName }), "Id", "LastName", order.CustomerId);
+            ViewData["SuperMarketId"] = new SelectList((await _supermarketService.GetAllAsync()).Select(s => new { s.Id, s.Name }), "Id", "Name", order.SuperMarketId);
 
             // Завантажуємо продукти для випадаючого списку "Додати товар"
-            ViewData["ProductId"] = new SelectList(_context.Products, "Id", "Name");
+            ViewData["ProductId"] = new SelectList((await _productService.GetAllAsync()).Select(p => new { p.Id, p.Name }), "Id", "Name");
 
             return View(order);
         }
@@ -93,28 +94,24 @@ namespace EFC.Controllers
             {
                 try
                 {
-                    _context.Update(order);
-                    await _context.SaveChangesAsync();
+                    await _orderService.UpdateAsync(order);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!_context.Orders.Any(e => e.Id == order.Id)) return NotFound();
+                    if (await _orderService.GetByIdAsync(order.Id) == null) return NotFound();
                     else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CustomerId"] = new SelectList(_context.Customers, "Id", "LastName", order.CustomerId);
-            ViewData["SuperMarketId"] = new SelectList(_context.Supermarkets, "Id", "Name", order.SuperMarketId);
+            ViewData["CustomerId"] = new SelectList((await _customerService.GetAllAsync()).Select(c => new { c.Id, c.LastName }), "Id", "LastName", order.CustomerId);
+            ViewData["SuperMarketId"] = new SelectList((await _supermarketService.GetAllAsync()).Select(s => new { s.Id, s.Name }), "Id", "Name", order.SuperMarketId);
             return View(order);
         }
-
-        // --- НОВІ МЕТОДИ ДЛЯ РОБОТИ З ТОВАРАМИ ---
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddDetail(int OrderId, int ProductId, double Quantity)
         {
-            // Створюємо новий запис деталізації
             var detail = new OrderDetail
             {
                 OrderId = OrderId,
@@ -122,12 +119,9 @@ namespace EFC.Controllers
                 Quantity = Quantity
             };
 
-            // Важливо: ModelState може бути невалідним через навігаційні властивості (Order, Product)
-            // Тому ми просто додаємо об'єкт, якщо ID коректні
             if (OrderId > 0 && ProductId > 0 && Quantity > 0)
             {
-                _context.OrderDetails.Add(detail);
-                await _context.SaveChangesAsync();
+                await _orderService.AddDetailAsync(detail);
             }
 
             return RedirectToAction(nameof(Edit), new { id = OrderId });
@@ -137,29 +131,30 @@ namespace EFC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteDetail(int id)
         {
-            var detail = await _context.OrderDetails.FindAsync(id);
+            var detailEntity = await _orderService.GetDetailByIdAsync(id);
             int orderId = 0;
-            if (detail != null)
+            if (detailEntity != null)
             {
-                orderId = detail.OrderId;
-                _context.OrderDetails.Remove(detail);
-                await _context.SaveChangesAsync();
+                orderId = detailEntity.OrderId;
             }
+
+            await _orderService.DeleteDetailAsync(id);
             return RedirectToAction(nameof(Edit), new { id = orderId });
         }
 
-        // --- ВИДАЛЕННЯ ЗАМОВЛЕННЯ ---
-
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null) return NotFound();
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-            var order = await _context.Orders
-                .Include(o => o.Customer)
-                .Include(o => o.SuperMarket)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var order = await _orderService.GetByIdAsync(id.Value);
 
-            if (order == null) return NotFound();
+            if (order == null)
+            {
+                return NotFound();
+            }
 
             return View(order);
         }
@@ -168,12 +163,7 @@ namespace EFC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order != null)
-            {
-                _context.Orders.Remove(order);
-                await _context.SaveChangesAsync();
-            }
+            await _orderService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
     }
